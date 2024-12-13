@@ -1,0 +1,99 @@
+---
+title: "PLAN 372 Final"
+format: html
+editor: visual
+---
+
+## PLAN 372 Final
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+library(ggplot2)
+```
+
+
+```{r}
+#Reads in car crash data
+data_2011 = read_csv("2011washington.csv")
+data_2012 = read_csv("2012washington.csv")
+data_2014 = read_csv("2014washington.csv")
+data_2015 = read_csv("2015washington.csv")
+```
+
+```{r}
+#Finds the total number of car crashes reported for each year
+tot2011 = length(data_2011$CRASH_CRN)
+tot2012 = length(data_2012$CRASH_CRN)
+tot2014 = length(data_2014$CRASH_CRN)
+tot2015 = length(data_2015$CRASH_CRN)
+```
+
+```{r}
+#Creates a table containing the percentage of total car crashes per year that each of these factors makes up
+#Considers alcohol, speeding, cell phone (used as a proxy for distraction/distracted driving), and fatigue
+table = tribble(
+    ~Cause, ~year_2011, ~year_2012, ~year_2014, ~year_2015, 
+    "Alcohol", sum(data_2011$ALCOHOL_RELATED)/tot2011, sum(data_2012$ALCOHOL_RELATED)/tot2012, sum(data_2014$ALCOHOL_RELATED)/tot2014, sum(data_2015$ALCOHOL_RELATED)/tot2015,
+    "Speeding", sum(data_2011$SPEEDING_RELATED)/tot2011, sum(data_2012$SPEEDING_RELATED)/tot2012, sum(data_2014$SPEEDING_RELATED)/tot2014, sum(data_2015$SPEEDING_RELATED)/tot2015,
+    "Cell Phone", sum(data_2011$CELL_PHONE)/tot2011, sum(data_2012$CELL_PHONE)/tot2012, sum(data_2014$CELL_PHONE)/tot2014, sum(data_2015$CELL_PHONE)/tot2015,
+    "Fatigue", sum(data_2011$FATIGUE_ASLEEP)/tot2011, sum(data_2012$FATIGUE_ASLEEP)/tot2012, sum(data_2014$FATIGUE_ASLEEP)/tot2014, sum(data_2015$FATIGUE_ASLEEP)/tot2015,
+)
+table
+```
+
+
+```{r}
+#Function to plot multiple graphs at the same time
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+#Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+
+```
+
+
+```{r}
+#Plots data 
+table$year_2011
+plot1 = ggplot(table, aes(x=year_2011, y=Cause)) + geom_col()
+plot2 = ggplot(table, aes(x=year_2012, y=Cause)) + geom_col()
+plot3 = ggplot(table, aes(x=year_2014, y=Cause)) + geom_col()
+plot4 = ggplot(table, aes(x=year_2015, y=Cause)) + geom_col()
+
+multiplot(plot1, plot2, plot3, plot4, cols=2)
+```
